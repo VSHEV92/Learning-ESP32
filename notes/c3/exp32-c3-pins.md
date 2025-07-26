@@ -1,5 +1,7 @@
 # ESP32-C3 Pins
 
+[ESP-C3 Datasheet](https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf)
+
 ------
 
 ### Clock Pins
