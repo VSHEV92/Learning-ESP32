@@ -38,6 +38,6 @@ void configure_driver() {
 void poll_driver() {
     uint32_t button_value;
 
-    button_value = gpio_get_level(GPIO_NUM_0);
-    gpio_set_level(GPIO_NUM_8, button_value);
+    button_value = gpio_get_level(CONFIG_BUTTON_GPIO);
+    gpio_set_level(CONFIG_LED_GPIO, button_value);
 }

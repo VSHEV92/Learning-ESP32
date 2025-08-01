@@ -13,4 +13,12 @@ void app_main(void)
     }
 #endif
 
+#ifdef CONFIG_GPIO_HAL_API
+    ESP_LOGI("GPIO HAL", "Led and button example");
+    configure_hal();
+    while (1) {
+        poll_hal();
+    }
+#endif
+
 }
