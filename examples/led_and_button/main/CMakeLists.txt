@@ -4,6 +4,7 @@ idf_component_register(
         "led_and_button_driver.c"
         "led_and_button_hal.c"
         "led_and_button_ll.c"
+        "led_and_button_soc.c"
     INCLUDE_DIRS 
         "."
 )

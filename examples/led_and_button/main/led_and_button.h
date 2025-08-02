@@ -21,4 +21,11 @@ void poll_hal();
 void configure_ll();
 void poll_ll();
 
+
+/*
+ *  Configure gpio pins. Poll button and blink led using SoC Macro API
+ */
+void configure_soc();
+void poll_soc();
+
 #endif

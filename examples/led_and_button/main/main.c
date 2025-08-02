@@ -30,4 +30,12 @@ void app_main(void)
     }
 #endif
 
+#ifdef CONFIG_GPIO_SOC_API
+    ESP_LOGI("GPIO Soc Macro", "Led and button example");
+    configure_soc();
+    while (1) {
+        poll_soc();
+    }
+#endif
+
 }
