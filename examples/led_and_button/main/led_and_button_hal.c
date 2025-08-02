@@ -1,6 +1,9 @@
-#include "led_and_button.h"
+#include "hal/gpio_hal.h"
+#include "esp_rom_gpio.h"
+#include "sdkconfig.h"
 
-// get GPIO registers structure
+// Get GPIO registers structure
+// For HAL we need wrapper of this structure with gpio_hal_context_t type
 static gpio_hal_context_t gpio_hal = {
     .dev = GPIO_HAL_GET_HW(GPIO_PORT_0)
 };
@@ -26,6 +29,7 @@ void configure_hal() {
     esp_rom_gpio_connect_out_signal(CONFIG_LED_GPIO, SIG_GPIO_OUT_IDX, false, false);
 
     // 2. Configure IO Mux to get data from GPIO Matrix
+    //    GPIO_PIN_MUX_REG is array that contain IO MUX register's addresses
     uint32_t io_reg = GPIO_PIN_MUX_REG[CONFIG_LED_GPIO];
     gpio_hal_iomux_func_sel(io_reg, PIN_FUNC_GPIO);
 

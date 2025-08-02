@@ -1,5 +1,6 @@
 #include "led_and_button.h"
 #include "esp_log.h"
+#include "sdkconfig.h"
 
 
 void app_main(void)
@@ -18,6 +19,14 @@ void app_main(void)
     configure_hal();
     while (1) {
         poll_hal();
+    }
+#endif
+
+#ifdef CONFIG_GPIO_LL_API
+    ESP_LOGI("GPIO Low Level", "Led and button example");
+    configure_ll();
+    while (1) {
+        poll_ll();
     }
 #endif
 

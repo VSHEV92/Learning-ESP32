@@ -3,6 +3,7 @@ idf_component_register(
         "main.c"
         "led_and_button_driver.c"
         "led_and_button_hal.c"
+        "led_and_button_ll.c"
     INCLUDE_DIRS 
         "."
 )

@@ -12,6 +12,10 @@ menu "Led and Button Example"
             bool "GPIO Driver API"
         config GPIO_HAL_API
             bool "GPIO HAL API"
+        config GPIO_LL_API
+            bool "GPIO Low Level API"
+        config GPIO_SOC_API
+            bool "GPIO Soc Macro API"
     endchoice
 
     config BUTTON_GPIO

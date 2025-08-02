@@ -1,4 +1,5 @@
-#include "led_and_button.h"
+#include "driver/gpio.h"
+#include "sdkconfig.h"
 
 void configure_driver() {
     gpio_config_t gpio_cfg;

@@ -1,10 +1,6 @@
 #ifndef LED_AND_BUTTON_H
 #define LED_AND_BUTTON_H
 
-#include "driver/gpio.h"
-#include "hal/gpio_hal.h"
-#include "sdkconfig.h"
-
 /*
  *  Configure gpio pins. Poll button and blink led using driver level API
  */
@@ -17,5 +13,12 @@ void poll_driver();
  */
 void configure_hal();
 void poll_hal();
+
+
+/*
+ *  Configure gpio pins. Poll button and blink led using Low Level API
+ */
+void configure_ll();
+void poll_ll();
 
 #endif
