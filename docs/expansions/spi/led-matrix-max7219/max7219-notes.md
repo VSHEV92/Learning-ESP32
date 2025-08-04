@@ -34,9 +34,9 @@ When the MAX7219 is in shutdown mode, the scan oscillator is halted, all segment
 
 Shutdown register address is **0xC**. 
 
-**D0 = 0** - Normal Operation. 
+**D0 = 1** - Normal Operation. 
 
-**D0 = 1** - Shutdown mode. 
+**D0 = 0** - Shutdown mode. 
 
 ### Decode-Mode
 
