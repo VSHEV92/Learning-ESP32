@@ -1,5 +1,5 @@
-#ifndef LED_MATRIX_MAX7219_H
-#define LED_MATRIX_MAX7219_H
+#ifndef MAX7219_H
+#define MAX7219_H
 
 #include <string.h>
 #include <driver/spi_master.h>
@@ -9,6 +9,8 @@
 
 #define MAX7219_ADDR_SIZE 8
 #define MAX7219_DATA_SIZE 8
+
+#define MAX7219_INTENSITY_LEVELS 16
 
 #define MAX7219_DATA0_REG         0x1 
 #define MAX7219_DATA1_REG         0x2 

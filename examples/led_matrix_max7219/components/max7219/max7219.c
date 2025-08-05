@@ -1,4 +1,4 @@
-#include <led_matrix_max7219.h>
+#include "driver/max7219.h"
 
 uint8_t MAX7219_DATA_REGS [] = {
     MAX7219_DATA0_REG,
