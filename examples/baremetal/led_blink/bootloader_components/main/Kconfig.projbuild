@@ -1,0 +1,15 @@
+menu "Baremetal LED Blink"
+
+    config LED_GPIO
+        int "Led GPIO number"
+        default 21
+        help
+            Led GPIO number.
+
+    config BLINK_PERIOD_US
+        int "Blink period in microseconds"
+        default 1000000
+        help
+            Blink period in microseconds.
+
+endmenu
