@@ -2,7 +2,7 @@
 #include "esp_rom_sys.h"
 #include "esp_rom_gpio.h"
 #include "sdkconfig.h"
-#include "boot_watchdogs.h"
+#include "custom_init.h"
 
 static gpio_hal_context_t gpio_hal = {
     .dev = GPIO_HAL_GET_HW(GPIO_PORT_0)
@@ -32,7 +32,7 @@ static void configure_led_gpio(gpio_hal_context_t* gpio_hal) {
 void __attribute__((noreturn)) call_start_cpu0(void)
 {
     // disable boot watchdog timers
-    bootrom_watchdogs_disable();
+    custom_init();
 
     // configure led gpio as output pin
     configure_led_gpio(&gpio_hal);
