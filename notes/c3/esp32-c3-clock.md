@@ -34,17 +34,18 @@ CPU_CLK is the master clock for CPU and it can be as high as **160 MHz** when CP
 
 ### PLL_CLK
 
-1. PLL_CLK frequency can be **480 MHz** or **320 MHz**. The actual value is configured using **SYSTEM_PLL_FREQ_SEL** field in **SYSTEM_CPU_PER_CONF_REG** register
+1. Configure **SYSTEM_SOC_CLK_SEL** field in **SYSTEM_SYSCLK_CONF_REG** register to 1
 
+2. PLL_CLK frequency can be **480 MHz** or **320 MHz**. The actual value is configured using **SYSTEM_PLL_FREQ_SEL** field in **SYSTEM_CPU_PER_CONF_REG** register
    - **SYSTEM_PLL_FREQ_SEL** = 0 - 320 MHz
    - **SYSTEM_PLL_FREQ_SEL** = 1 - 480 MHz
 
-2. CPU frequency derived from PLL frequency using divider. Divide value can be configured by **SYSTEM_CPUPERIOD_SEL** in **SYSTEM_CPU_PER_CONF_REG** register. 
+3. CPU frequency derived from PLL frequency using divider. Divide value can be configured by **SYSTEM_CPUPERIOD_SEL** in **SYSTEM_CPU_PER_CONF_REG** register. 
 
    - **SYSTEM_CPUPERIOD_SEL** = 0 - divide by 4 or 6
    - **SYSTEM_CPUPERIOD_SEL** = 0 - divide by 2 or 3
 
-3. CPU can be configured to clocked by **80 MHz** or **160 MHz** frequency:
+4. CPU can be configured to clocked by **80 MHz** or **160 MHz** frequency:
 
    - CPU clock is **80 MHz**:
 

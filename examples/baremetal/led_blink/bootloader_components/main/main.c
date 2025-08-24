@@ -42,6 +42,8 @@ void __attribute__((noreturn)) call_start_cpu0(void)
     while(1){
         gpio_hal_set_level(&gpio_hal, CONFIG_LED_GPIO, value);
         value = !value;
-        esp_rom_delay_us(CONFIG_BLINK_PERIOD_US/2);
+        // esp_rom think that cpu has default clock frequency 20 MHz
+        // but custom_init configure cpu clock to 160 MHz
+        esp_rom_delay_us(CONFIG_BLINK_PERIOD_US/2 * (160/20));
     }
 }
