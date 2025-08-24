@@ -7,7 +7,7 @@
 #define SYSTIMER_UNIT0 0
 #define SYSTIMER_TARGET0 0
 
-static const char *TAG = "system_timer_example";
+static const char *TAG = "LL";
 
 static systimer_dev_t* systimer_dev = &SYSTIMER;
 

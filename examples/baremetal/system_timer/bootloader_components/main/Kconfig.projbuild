@@ -1,5 +1,17 @@
 menu "Baremetal System Timer"
 
+    choice SYSTEM_TIMER_API
+        prompt "SYSTEM_TIMER API"
+        default SYSTEM_TIMER_LL_API
+        help
+            Select API used for system timer example.
+
+        config SYSTEM_TIMER_HAL_API
+            bool "Syetem timer HAL API"
+        config SYSTEM_TIMER_LL_API
+            bool "Syetem timer LL API"
+    endchoice
+
     config SYSTEM_TIMER_PERIOD_MS
         int "System timer period in miliseconds"
         default 1000
