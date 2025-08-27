@@ -1,0 +1,21 @@
+menu "Baremetal General Perpose Timer"
+
+    choice GENERAL_PERPOSE_TIMER_API
+        prompt "GENERAL_PERPOSE_TIMER API"
+        default GENERAL_PERPOSE_TIMER_LL_API
+        help
+            Select API used for perpose timer example.
+
+        config GENERAL_PERPOSE_TIMER_HAL_API
+            bool "General perpose timer HAL API"
+        config GENERAL_PERPOSE_TIMER_LL_API
+            bool "General perpose timer LL API"
+    endchoice
+
+    config GENERAL_PERPOSE_TIMER_PERIOD_MS
+        int "General perpose timer period in miliseconds"
+        default 1000
+        help
+            General perpose timer period in miliseconds.
+
+endmenu

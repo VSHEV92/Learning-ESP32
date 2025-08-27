@@ -82,4 +82,5 @@ Interrupts are triggered after an alarm (or stage timeout for watchdog timers) o
 12. Read interrupt status or raw interrupt value using **TIMG_T0_INT_ST** in **TIMG_INT_ST_TIMERS_REG** and **TIMG_T0_INT_RAW** in **TIMG_INT_RAW_TIMERS_REG**
 13. Clear interrupt by setting its corresponding bit to 1 **TIMG_T0_INT_CLR** bit in **TIMG_INT_CLR_TIMERS_REG** register
 14. Read counter value by writing any value to the **TIMG_TxUPDATE_REG**. When **TIMG_TxUPDATE_REG** register is cleared counter value can be read from  **TIMG_TxLO_REG** (lower 32 bits) and **TIMG_TxHI_REG** (upper 22 bits) registers
+15.  Re-enable alarm by setting **TIMG_Tx_ALARM_EN** field in **TIMG_TxCONFIG_REG** register
 
