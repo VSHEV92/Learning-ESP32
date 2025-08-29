@@ -1,0 +1,15 @@
+menu "Baremetal Main Watchdog Timer"
+
+    choice MAIN_WATCHDOG_TIMER_API
+        prompt "MAIN_WATCHDOG_TIMER API"
+        default MAIN_WATCHDOG_TIMER_LL_API
+        help
+            Select API used for main_watchdog timer example.
+
+        config MAIN_WATCHDOG_TIMER_HAL_API
+            bool "Main Watchdog timer HAL API"
+        config MAIN_WATCHDOG_TIMER_LL_API
+            bool "Main Watchdog timer LL API"
+    endchoice
+
+endmenu

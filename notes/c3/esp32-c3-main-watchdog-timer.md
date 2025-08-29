@@ -45,8 +45,8 @@ Upon the expiry of each stage, one of the following expiry actions will be execu
 
 ## Programming model
 
-1. For first timer after ROM boot initial code disable flash boot protection by clear **TIMG_WDT_FLASHBOOT_MOD_EN** field in **TIMG_WDTCONFIG0_REG** register
-2. Disable write protection to open access to MWDT configuration registers. Write key **0x50D83AA1** to **TIMG_WDT_WKEY** register
+1. Disable write protection to open access to MWDT configuration registers. Write key **0x50D83AA1** to **TIMG_WDT_WKEY** register
+2. For first timer after ROM boot initial code disable flash boot protection by clear **TIMG_WDT_FLASHBOOT_MOD_EN** field in **TIMG_WDTCONFIG0_REG** register
 3. Select clock signal between APB_CLK and XTAL_CLK using **TIMG_WDT_USE_XTAL** field of the **TIMG_WDTCONFIG0_REG** register. 
    - 1- use XTAL_CLK
    - 0 - use APB_CLK
