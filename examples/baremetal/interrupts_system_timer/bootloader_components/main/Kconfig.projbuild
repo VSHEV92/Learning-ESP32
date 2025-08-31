@@ -1,0 +1,9 @@
+menu "Baremetal Interrrupts with System Timer"
+
+    config SYSTEM_TIMER_PERIOD_MS
+        int "System timer period in miliseconds"
+        default 1000
+        help
+            System timer period in miliseconds.
+
+endmenu
