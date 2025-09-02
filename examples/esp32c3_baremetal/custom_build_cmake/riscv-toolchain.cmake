@@ -1,0 +1,10 @@
+# configure cross-compiler 
+set(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_SYSTEM_PROCESSOR riscv32)
+
+set(CMAKE_FIND_ROOT_PATH /home/$ENV{USER}/.espressif/tools/riscv32-esp-elf/esp-13.2.0_20230928/riscv32-esp-elf)
+set(CMAKE_C_COMPILER ${CMAKE_FIND_ROOT_PATH}/bin/riscv32-esp-elf-gcc)
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
