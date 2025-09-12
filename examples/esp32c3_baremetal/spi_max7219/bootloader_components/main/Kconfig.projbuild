@@ -1,0 +1,23 @@
+menu "Led Matrix with MAX7219 Example"
+
+    orsource "$IDF_PATH/examples/common_components/env_caps/$IDF_TARGET/Kconfig.env_caps"
+
+    config MAX7219_CLK_GPIO
+        int "SPI CLK signal GPIO number"
+        default 8
+        help
+            GPIO number of SPI CLK signal.
+
+    config MAX7219_MOSI_GPIO
+        int "SPI MOSI signal GPIO number"
+        default 10
+        help
+            GPIO number of SPI MOSI signal.
+
+    config MAX7219_CS_GPIO
+        int "SPI CS signal GPIO number"
+        default 21
+        help
+            GPIO number of SPI CS signal.
+
+endmenu
