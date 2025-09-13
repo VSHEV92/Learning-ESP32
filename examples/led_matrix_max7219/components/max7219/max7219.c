@@ -39,6 +39,7 @@ spi_device_handle_t max7219_init(max7219_config_t* max7219_cfg) {
     spi_device_handle_t spi_dev;
     spi_bus_add_device(MAX7219_HOST, &spi_dev_cfg, &spi_dev);
 
+    max7219_display_test_disable(spi_dev);
     max7219_shutdown_enable(spi_dev);
     max7219_scan_limit_set(spi_dev, max7219_cfg->scan_limit);
     max7219_decode_mask_set(spi_dev, max7219_cfg->decode_mask);

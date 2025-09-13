@@ -4,6 +4,11 @@
 #include "esp_rom_sys.h"
 #include "custom_init.h"
 
+#define MAX7219_INTENSITY_CHANGE_DELAY_US 20000
+
+// rom delay function suppose CPU clock id XTAL 20 MHz, but custom init set it to PLL 160 Mhz
+#define MAX7219_INTENSITY_CHANGE_DELAY_RECALC ((MAX7219_INTENSITY_CHANGE_DELAY_US) * (160/20))
+
 uint8_t data[] = {
     0b00000000,
     0b01101100,
@@ -37,12 +42,12 @@ void __attribute__((noreturn)) call_start_cpu0(void)
     while (1) {
         for (int i = 0; i < MAX7219_INTENSITY_LEVELS - 2; i++) {
             max7219_intensity_set(i);
-            esp_rom_delay_us(20000 * (160/20));
+            esp_rom_delay_us(MAX7219_INTENSITY_CHANGE_DELAY_RECALC);
         }
 
         for (int i = MAX7219_INTENSITY_LEVELS - 1; i > 0; i--) {
             max7219_intensity_set(i);
-            esp_rom_delay_us(20000 * (160/20));
+            esp_rom_delay_us(MAX7219_INTENSITY_CHANGE_DELAY_RECALC);
         }
     }
 }
