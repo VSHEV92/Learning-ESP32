@@ -18,7 +18,7 @@ void app_main(void) {
     // create and init mutex 
     ESP_LOGI(TAG, "Create mutex");
     semaphr = xSemaphoreCreateMutex();
-    xSemaphoreGive(semaphr);
+   // xSemaphoreGive(semaphr);
 
 
     if (semaphr == NULL) {
