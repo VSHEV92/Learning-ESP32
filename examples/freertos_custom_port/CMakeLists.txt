@@ -4,15 +4,25 @@ set(PORT /dev/ttyACM0)
 set(BAUD_RATE 115200)
 
 cmake_minimum_required(VERSION 3.16)
-project(hello_esp32 LANGUAGES C)
+project(esp32c3_freertos_port LANGUAGES C ASM)
 
 # ---------------------------------------------------
 # ----------------- ELF file target -----------------
 # ---------------------------------------------------
-add_executable(${PROJECT_NAME} main.c)
+add_executable(${PROJECT_NAME} 
+    src/main.c
+    src/port.c
+    src/portASM.S
+    src/list.c
+    src/queue.c
+    src/tasks.c
+    src/MemMang/heap_4.c
+)
+
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
     .
+    ./include
     $ENV{IDF_PATH}/components/esp_common/include
     $ENV{IDF_PATH}/components/esp_rom/include
     $ENV{IDF_PATH}/components/soc/include
@@ -23,7 +33,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
-    -march=rv32imc
+    -march=rv32imc_zicsr
     -mabi=ilp32
 )
 

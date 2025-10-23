@@ -1,7 +1,7 @@
 MEMORY {
   iache  (rwx)  : ORIGIN = 0X4037c000, LENGTH = 16k
-  iram   (rwx)  : ORIGIN = 0x40380400, LENGTH = 32k 
-  dram   (rw)   : ORIGIN = 0x3fc80000 + LENGTH(iram), LENGTH = 128k
+  iram   (rwx)  : ORIGIN = 0x40380400, LENGTH = 128k 
+  dram   (rw)   : ORIGIN = 0x3fc80000 + LENGTH(iram), LENGTH = 256k
 }
 
 _eram = ORIGIN(dram) + LENGTH(dram);
@@ -51,7 +51,8 @@ SECTIONS {
 PROVIDE(ets_printf = 0x40000040); 
 PROVIDE(ets_delay_us = 0x40000050);
 
-/*
+PROVIDE(__clzsi2 = 0x4000079c);
+
 PROVIDE(memset = 0x40000354);
 PROVIDE(memcpy = 0x40000358);
 PROVIDE(memmove = 0x4000035c);
@@ -141,4 +142,4 @@ PROVIDE(uart_rx_one_char_block = 0x40000074);
 PROVIDE(uart_rx_readbuff = 0x40000078);
 
 PROVIDE(__divdi3 = 0x400007b4);
-*/
+
