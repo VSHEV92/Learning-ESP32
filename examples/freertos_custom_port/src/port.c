@@ -1,42 +1,15 @@
-/*
- * FreeRTOS Kernel <DEVELOPMENT BRANCH>
- * Copyright (C) 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * SPDX-License-Identifier: MIT
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
- * the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * https://www.FreeRTOS.org
- * https://github.com/FreeRTOS
- *
- */
-
-/*-----------------------------------------------------------
- * Implementation of functions defined in portable.h for the RISC-V port.
- *----------------------------------------------------------*/
-
-/* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "portmacro.h"
-
-/* Standard includes. */
 #include "string.h"
+
+#include "hal/systimer_ll.h"
+
+#define SYSTIMER_UNIT0 0
+#define SYSTIMER_TARGET0 0
+
+static systimer_dev_t* systimer_dev = &SYSTIMER;
+
 
 #ifdef configCLINT_BASE_ADDRESS
     #warning "The configCLINT_BASE_ADDRESS constant has been deprecated. configMTIME_BASE_ADDRESS and configMTIMECMP_BASE_ADDRESS are currently being derived from the (possibly 0) configCLINT_BASE_ADDRESS setting.  Please update to define configMTIME_BASE_ADDRESS and configMTIMECMP_BASE_ADDRESS directly in place of configCLINT_BASE_ADDRESS. See www.FreeRTOS.org/Using-FreeRTOS-on-RISC-V.html"
@@ -123,39 +96,44 @@ size_t xTaskReturnAddress = ( size_t ) portTASK_RETURN_ADDRESS;
     #define portCHECK_ISR_STACK()
 #endif /* configCHECK_FOR_STACK_OVERFLOW > 2 */
 
-/*-----------------------------------------------------------*/
 
-#if ( configMTIME_BASE_ADDRESS != 0 ) && ( configMTIMECMP_BASE_ADDRESS != 0 )
 
-    void vPortSetupTimerInterrupt( void )
-    {
-        uint32_t ulCurrentTimeHigh, ulCurrentTimeLow;
-        volatile uint32_t * const pulTimeHigh = ( volatile uint32_t * const ) ( ( configMTIME_BASE_ADDRESS ) + 4UL ); /* 8-byte type so high 32-bit word is 4 bytes up. */
-        volatile uint32_t * const pulTimeLow = ( volatile uint32_t * const ) ( configMTIME_BASE_ADDRESS );
-        volatile uint32_t ulHartId;
+void vPortSetupTimerInterrupt( void )
+{
+    // 1. Enable system timer clock
+    systimer_ll_enable_clock(systimer_dev, true);
+    
+    // 2. Disable counter
+    systimer_ll_enable_counter(systimer_dev, SYSTIMER_UNIT0, false);
 
-        __asm volatile ( "csrr %0, mhartid" : "=r" ( ulHartId ) );
+    // 3. Set counter initial value
+    systimer_ll_set_counter_value(systimer_dev, SYSTIMER_UNIT0, 0);
+    systimer_ll_apply_counter_value(systimer_dev, SYSTIMER_UNIT0);
 
-        pullMachineTimerCompareRegister = ( volatile uint64_t * ) ( ullMachineTimerCompareRegisterBase + ( ulHartId * sizeof( uint64_t ) ) );
+    // 4. Configure comparator
+    systimer_ll_connect_alarm_counter(systimer_dev, SYSTIMER_TARGET0, SYSTIMER_UNIT0);
+    systimer_ll_enable_alarm_period(systimer_dev, SYSTIMER_TARGET0);
+    systimer_ll_set_alarm_period(systimer_dev, SYSTIMER_TARGET0, uxTimerIncrementsForOneTick * 100);
+    systimer_ll_apply_alarm_value(systimer_dev, SYSTIMER_TARGET0);
 
-        do
-        {
-            ulCurrentTimeHigh = *pulTimeHigh;
-            ulCurrentTimeLow = *pulTimeLow;
-        } while( ulCurrentTimeHigh != *pulTimeHigh );
+    // 5. Enable comparator
+    systimer_ll_enable_alarm(systimer_dev, SYSTIMER_TARGET0, true);
 
-        ullNextTime = ( uint64_t ) ulCurrentTimeHigh;
-        ullNextTime <<= 32ULL; /* High 4-byte word is 32-bits up. */
-        ullNextTime |= ( uint64_t ) ulCurrentTimeLow;
-        ullNextTime += ( uint64_t ) uxTimerIncrementsForOneTick;
-        *pullMachineTimerCompareRegister = ullNextTime;
+    // 6. Enable comparator interrupt
+    systimer_ll_enable_alarm_int(systimer_dev, SYSTIMER_TARGET0, true);
+    
+    // 7. Enable counter
+    systimer_ll_enable_counter(systimer_dev, SYSTIMER_UNIT0, true);
 
-        /* Prepare the time to use after the next tick interrupt. */
-        ullNextTime += ( uint64_t ) uxTimerIncrementsForOneTick;
+    while(1) {
+        while( !systimer_ll_is_alarm_int_fired(systimer_dev, SYSTIMER_TARGET0) );
+        systimer_ll_clear_alarm_int(systimer_dev, SYSTIMER_TARGET0);
+
+        ets_printf("Hello from custom freertos port!\n");
+        //ets_delay_us(1000000 * (160/20));
     }
+}
 
-#endif /* ( configMTIME_BASE_ADDRESS != 0 ) && ( configMTIME_BASE_ADDRESS != 0 ) */
-/*-----------------------------------------------------------*/
 
 BaseType_t xPortStartScheduler( void )
 {
@@ -176,19 +154,7 @@ BaseType_t xPortStartScheduler( void )
     }
     #endif /* configASSERT_DEFINED */
 
-    /* If there is a CLINT then it is ok to use the default implementation
-     * in this file, otherwise vPortSetupTimerInterrupt() must be implemented to
-     * configure whichever clock is to be used to generate the tick interrupt. */
     vPortSetupTimerInterrupt();
-
-    #if ( ( configMTIME_BASE_ADDRESS != 0 ) && ( configMTIMECMP_BASE_ADDRESS != 0 ) )
-    {
-        /* Enable mtime and external interrupts.  1<<7 for timer interrupt,
-         * 1<<11 for external interrupt.  _RB_ What happens here when mtime is
-         * not present as with pulpino? */
-        __asm volatile ( "csrs mie, %0" ::"r" ( 0x880 ) );
-    }
-    #endif /* ( configMTIME_BASE_ADDRESS != 0 ) && ( configMTIMECMP_BASE_ADDRESS != 0 ) */
 
     xPortStartFirstTask();
 

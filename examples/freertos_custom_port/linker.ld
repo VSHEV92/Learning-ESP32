@@ -48,6 +48,8 @@ SECTIONS {
   PROVIDE(_end = .);
 }
 
+PROVIDE ( SYSTIMER = 0x60023000 );
+
 PROVIDE(ets_printf = 0x40000040); 
 PROVIDE(ets_delay_us = 0x40000050);
 

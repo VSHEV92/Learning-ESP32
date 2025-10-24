@@ -1,15 +1,15 @@
 #include <custom_init.h>
-
-// prototypes of esp32c3 rom functions
-int ets_printf(const char *format, ...);
+#include <FreeRTOS.h>
+#include <task.h>
 
 void __attribute__((noreturn)) main() {
     
     // run custom soc init
     custom_init();
 
-    ets_printf("Hello from custom freertos port!\n");
+    vTaskStartScheduler();
     
-    while(1) {}
+    for( ;; );
+    
 
 }
