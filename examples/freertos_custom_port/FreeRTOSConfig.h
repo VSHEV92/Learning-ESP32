@@ -2,6 +2,8 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
+#define configNUMBER_OF_CORES 1
+
 #define configCPU_CLOCK_HZ    ( ( unsigned long ) 16000000 )
 
 #define configTICK_RATE_HZ                         100

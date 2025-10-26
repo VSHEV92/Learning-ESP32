@@ -48,13 +48,33 @@ SECTIONS {
   PROVIDE(_end = .);
 }
 
+/* ESP32 C3 ROM */
+
+/* Peripheral */ 
 PROVIDE ( SYSTIMER = 0x60023000 );
 
+/* rom api functions */
 PROVIDE(ets_printf = 0x40000040); 
 PROVIDE(ets_delay_us = 0x40000050);
 
+/* interrupt functions */
+PROVIDE( esprv_intc_int_set_priority = 0x400005e0 );
+PROVIDE( esprv_intc_int_set_threshold = 0x400005e4 );
+PROVIDE( esprv_intc_int_enable = 0x400005e8 );
+PROVIDE( esprv_intc_int_disable = 0x400005ec );
+PROVIDE( esprv_intc_int_set_type = 0x400005f0 );
+PROVIDE( intr_matrix_set = 0x400005f4 );
+PROVIDE( ets_intr_lock = 0x400005f8 );
+PROVIDE( ets_intr_unlock = 0x400005fc );
+PROVIDE( intr_handler_set = 0x40000600 );
+PROVIDE( ets_isr_attach = 0x40000604 );
+PROVIDE( ets_isr_mask = 0x40000608 );
+PROVIDE( ets_isr_unmask = 0x4000060c );
+
+/* libgcc functions */
 PROVIDE(__clzsi2 = 0x4000079c);
 
+/* newlib */
 PROVIDE(memset = 0x40000354);
 PROVIDE(memcpy = 0x40000358);
 PROVIDE(memmove = 0x4000035c);

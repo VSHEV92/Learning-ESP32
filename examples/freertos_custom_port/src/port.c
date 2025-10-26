@@ -4,24 +4,18 @@
 #include "string.h"
 
 #include "hal/systimer_ll.h"
+#include "riscv/rv_utils.h"
+#include "riscv/interrupt.h"
+#include "soc/interrupts.h"
 
+/* ESP32 port */
+#define RV_EXTERNAL_INT_OFFSET  0
 #define SYSTIMER_UNIT0 0
 #define SYSTIMER_TARGET0 0
+#define INTERRUPT_ID 1
 
+extern uint32_t _custom_vector_table;
 static systimer_dev_t* systimer_dev = &SYSTIMER;
-
-
-#ifdef configCLINT_BASE_ADDRESS
-    #warning "The configCLINT_BASE_ADDRESS constant has been deprecated. configMTIME_BASE_ADDRESS and configMTIMECMP_BASE_ADDRESS are currently being derived from the (possibly 0) configCLINT_BASE_ADDRESS setting.  Please update to define configMTIME_BASE_ADDRESS and configMTIMECMP_BASE_ADDRESS directly in place of configCLINT_BASE_ADDRESS. See www.FreeRTOS.org/Using-FreeRTOS-on-RISC-V.html"
-#endif
-
-#ifndef configMTIME_BASE_ADDRESS
-    #warning "configMTIME_BASE_ADDRESS must be defined in FreeRTOSConfig.h. If the target chip includes a memory-mapped mtime register then set configMTIME_BASE_ADDRESS to the mapped address.  Otherwise set configMTIME_BASE_ADDRESS to 0.  See www.FreeRTOS.org/Using-FreeRTOS-on-RISC-V.html"
-#endif
-
-#ifndef configMTIMECMP_BASE_ADDRESS
-    #warning "configMTIMECMP_BASE_ADDRESS must be defined in FreeRTOSConfig.h. If the target chip includes a memory-mapped mtimecmp register then set configMTIMECMP_BASE_ADDRESS to the mapped address.  Otherwise set configMTIMECMP_BASE_ADDRESS to 0.  See www.FreeRTOS.org/Using-FreeRTOS-on-RISC-V.html"
-#endif
 
 /* Let the user override the pre-loading of the initial RA. */
 #ifdef configTASK_RETURN_ADDRESS
@@ -97,9 +91,54 @@ size_t xTaskReturnAddress = ( size_t ) portTASK_RETURN_ADDRESS;
 #endif /* configCHECK_FOR_STACK_OVERFLOW > 2 */
 
 
+void clear_timer_interrupt() {
+    systimer_ll_clear_alarm_int(systimer_dev, SYSTIMER_TARGET0);
+//    ets_printf("mcause: %x!\n", RV_READ_CSR(mcause) );
+//    ets_printf("mepc: %x!\n", RV_READ_CSR(mepc) );
+}
+
+
+void intr_matrix_route(int intr_src, int intr_num) {
+    if (rv_utils_get_core_id() == 0) {
+        REG_WRITE(DR_REG_INTERRUPT_CORE0_BASE + 4 * intr_src, intr_num + RV_EXTERNAL_INT_OFFSET);
+    }
+}
 
 void vPortSetupTimerInterrupt( void )
 {
+    // --------------------------------------------
+    //            Configure interrupts
+    // --------------------------------------------
+
+    // 1. Disable interrupts globally (MSTATUS.MIE)
+    RV_CLEAR_CSR(mstatus, MSTATUS_MIE);
+
+    // 2. Set vector table address (MTVEC)
+    rv_utils_set_mtvec((uint32_t)(&_custom_vector_table));
+
+    // 3. Set interrupt type to level interrupt
+    esprv_intc_int_set_type(INTERRUPT_ID, INTR_TYPE_LEVEL);
+
+    // 4. Set interrupt priority to lowest value 1
+    esprv_intc_int_set_priority(INTERRUPT_ID, 1);
+
+    // 5. Configure interrupt peripheral source 
+    intr_matrix_route(ETS_SYSTIMER_TARGET0_INTR_SOURCE, INTERRUPT_ID);
+
+    // 6. Enable interrupt in controller
+    esprv_intc_int_enable(1 << INTERRUPT_ID);
+
+    // 7. Set interrupt threshold to 0, so that interrupt can be fired 
+    esprv_intc_int_set_threshold(0);
+
+    // 8. Run FENCE instruction so that all memory operations with interrupt controller registers are finished
+    rv_utils_memory_barrier();
+
+
+    // --------------------------------------------
+    //           Configure system timer
+    // --------------------------------------------
+
     // 1. Enable system timer clock
     systimer_ll_enable_clock(systimer_dev, true);
     
@@ -113,7 +152,7 @@ void vPortSetupTimerInterrupt( void )
     // 4. Configure comparator
     systimer_ll_connect_alarm_counter(systimer_dev, SYSTIMER_TARGET0, SYSTIMER_UNIT0);
     systimer_ll_enable_alarm_period(systimer_dev, SYSTIMER_TARGET0);
-    systimer_ll_set_alarm_period(systimer_dev, SYSTIMER_TARGET0, uxTimerIncrementsForOneTick * 100);
+    systimer_ll_set_alarm_period(systimer_dev, SYSTIMER_TARGET0, uxTimerIncrementsForOneTick);
     systimer_ll_apply_alarm_value(systimer_dev, SYSTIMER_TARGET0);
 
     // 5. Enable comparator
@@ -124,14 +163,6 @@ void vPortSetupTimerInterrupt( void )
     
     // 7. Enable counter
     systimer_ll_enable_counter(systimer_dev, SYSTIMER_UNIT0, true);
-
-    while(1) {
-        while( !systimer_ll_is_alarm_int_fired(systimer_dev, SYSTIMER_TARGET0) );
-        systimer_ll_clear_alarm_int(systimer_dev, SYSTIMER_TARGET0);
-
-        ets_printf("Hello from custom freertos port!\n");
-        //ets_delay_us(1000000 * (160/20));
-    }
 }
 
 

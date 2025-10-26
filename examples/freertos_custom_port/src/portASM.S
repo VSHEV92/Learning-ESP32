@@ -79,6 +79,9 @@ definitions. */
     #define portasmHAS_SIFIVE_CLINT 0
 #endif
 
+#define TIMER_INTERRUPT_ID 1
+.global clear_timer_interrupt
+
 .global xPortStartFirstTask
 .global pxPortInitialiseStack
 .global freertos_risc_v_trap_handler
@@ -362,6 +365,8 @@ asynchronous_interrupt:
     load_x sp, xISRStackTop             /* Switch to ISR stack. */
     j handle_interrupt
 
+    j processed_source                  /* No other exceptions handled yet. */
+
 synchronous_exception:
     addi a1, a1, 4                      /* Synchronous so update exception return address to the instruction after the instruction that generated the exeption. */
     store_x a1, 0( sp )                 /* Save updated exception return address. */
@@ -369,21 +374,17 @@ synchronous_exception:
     j handle_exception
 
 handle_interrupt:
-#if( portasmHAS_MTIME != 0 )
-
-    test_if_mtimer:                     /* If there is a CLINT then the mtimer is used to generate the tick interrupt. */
+    test_if_timer_interrupt:            
         addi t0, x0, 1
         slli t0, t0, __riscv_xlen - 1   /* LSB is already set, shift into MSB.  Shift 31 on 32-bit or 63 on 64-bit cores. */
-        addi t1, t0, 7                  /* 0x8000[]0007 == machine timer interrupt. */
+        addi t1, t0, TIMER_INTERRUPT_ID 
         bne a0, t1, application_interrupt_handler
 
-        portUPDATE_MTIMER_COMPARE_REGISTER
+        call clear_timer_interrupt
         call xTaskIncrementTick
         beqz a0, processed_source       /* Don't switch context if incrementing tick didn't unblock a task. */
         call vTaskSwitchContext
         j processed_source
-
-#endif /* portasmHAS_MTIME */
 
 application_interrupt_handler:
     call freertos_risc_v_application_interrupt_handler
@@ -403,3 +404,44 @@ application_exception_handler:
 processed_source:
     portcontextRESTORE_CONTEXT
 /*-----------------------------------------------------------*/
+
+/* vector table */
+.balign 0x100
+
+.global _custom_vector_table
+.type _custom_vector_table, @function
+_custom_vector_table:
+    j freertos_risc_v_trap_handler        /* 0 */
+    j freertos_risc_v_trap_handler        /* 1 */
+    j freertos_risc_v_trap_handler        /* 2 */
+    j freertos_risc_v_trap_handler        /* 3 */
+    j freertos_risc_v_trap_handler        /* 4 */
+    j freertos_risc_v_trap_handler        /* 5 */
+    j freertos_risc_v_trap_handler        /* 6 */
+    j freertos_risc_v_trap_handler        /* 7 */
+    j freertos_risc_v_trap_handler        /* 8 */
+    j freertos_risc_v_trap_handler        /* 9 */
+    j freertos_risc_v_trap_handler        /* 10 */
+    j freertos_risc_v_trap_handler        /* 11 */
+    j freertos_risc_v_trap_handler        /* 12 */
+    j freertos_risc_v_trap_handler        /* 13 */
+    j freertos_risc_v_trap_handler        /* 14 */
+    j freertos_risc_v_trap_handler        /* 15 */
+    j freertos_risc_v_trap_handler        /* 16 */
+    j freertos_risc_v_trap_handler        /* 17 */
+    j freertos_risc_v_trap_handler        /* 18 */
+    j freertos_risc_v_trap_handler        /* 19 */
+    j freertos_risc_v_trap_handler        /* 20 */
+    j freertos_risc_v_trap_handler        /* 21 */
+    j freertos_risc_v_trap_handler        /* 22 */
+    j freertos_risc_v_trap_handler        /* 23 */
+    j freertos_risc_v_trap_handler        /* 24 */
+    j freertos_risc_v_trap_handler        /* 25 */
+    j freertos_risc_v_trap_handler        /* 26 */
+    j freertos_risc_v_trap_handler        /* 27 */
+    j freertos_risc_v_trap_handler        /* 28 */
+    j freertos_risc_v_trap_handler        /* 29 */
+    j freertos_risc_v_trap_handler        /* 30 */
+    j freertos_risc_v_trap_handler        /* 31 */
+
+.size _custom_vector_table, .-_custom_vector_table

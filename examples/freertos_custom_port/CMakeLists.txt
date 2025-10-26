@@ -30,6 +30,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     $ENV{IDF_PATH}/components/hal/include
     $ENV{IDF_PATH}/components/hal/${TARGET}/include
     $ENV{IDF_PATH}/components/hal/platform_port/include
+    $ENV{IDF_PATH}/components/riscv/include
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
