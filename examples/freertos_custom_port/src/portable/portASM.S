@@ -1,83 +1,5 @@
-/*
- * FreeRTOS Kernel <DEVELOPMENT BRANCH>
- * Copyright (C) 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * SPDX-License-Identifier: MIT
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
- * the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- * https://www.FreeRTOS.org
- * https://github.com/FreeRTOS
- *
- */
-
-/*
- * The FreeRTOS kernel's RISC-V port is split between the the code that is
- * common across all currently supported RISC-V chips (implementations of the
- * RISC-V ISA), and code which tailors the port to a specific RISC-V chip:
- *
- * + The code that is common to all RISC-V chips is implemented in
- *   FreeRTOS\Source\portable\GCC\RISC-V\portASM.S.  There is only one
- *   portASM.S file because the same file is used no matter which RISC-V chip is
- *   in use.
- *
- * + The code that tailors the kernel's RISC-V port to a specific RISC-V
- *   chip is implemented in freertos_risc_v_chip_specific_extensions.h.  There
- *   is one freertos_risc_v_chip_specific_extensions.h that can be used with any
- *   RISC-V chip that both includes a standard CLINT and does not add to the
- *   base set of RISC-V registers.  There are additional
- *   freertos_risc_v_chip_specific_extensions.h files for RISC-V implementations
- *   that do not include a standard CLINT or do add to the base set of RISC-V
- *   registers.
- *
- * CARE MUST BE TAKEN TO INCLDUE THE CORRECT
- * freertos_risc_v_chip_specific_extensions.h HEADER FILE FOR THE CHIP
- * IN USE.  To include the correct freertos_risc_v_chip_specific_extensions.h
- * header file ensure the path to the correct header file is in the assembler's
- * include path.
- *
- * This freertos_risc_v_chip_specific_extensions.h is for use on RISC-V chips
- * that include a standard CLINT and do not add to the base set of RISC-V
- * registers.
- *
- */
 
 #include "portContext.h"
-
-/* Check the freertos_risc_v_chip_specific_extensions.h and/or command line
-definitions. */
-#if defined( portasmHAS_CLINT ) && defined( portasmHAS_MTIME )
-    #error The portasmHAS_CLINT constant has been deprecated.  Please replace it with portasmHAS_MTIME.  portasmHAS_CLINT and portasmHAS_MTIME cannot both be defined at once.  See https://www.FreeRTOS.org/Using-FreeRTOS-on-RISC-V.html
-#endif
-
-#ifdef portasmHAS_CLINT
-    #warning The portasmHAS_CLINT constant has been deprecated.  Please replace it with portasmHAS_MTIME and portasmHAS_SIFIVE_CLINT.  For now portasmHAS_MTIME and portasmHAS_SIFIVE_CLINT are derived from portasmHAS_CLINT.  See https://www.FreeRTOS.org/Using-FreeRTOS-on-RISC-V.html
-    #define portasmHAS_MTIME portasmHAS_CLINT
-    #define portasmHAS_SIFIVE_CLINT portasmHAS_CLINT
-#endif
-
-#ifndef portasmHAS_MTIME
-    #error freertos_risc_v_chip_specific_extensions.h must define portasmHAS_MTIME to either 1 (MTIME clock present) or 0 (MTIME clock not present).  See https://www.FreeRTOS.org/Using-FreeRTOS-on-RISC-V.html
-#endif
-
-#ifndef portasmHAS_SIFIVE_CLINT
-    #define portasmHAS_SIFIVE_CLINT 0
-#endif
 
 #define TIMER_INTERRUPT_ID 1
 .global clear_timer_interrupt
@@ -87,52 +9,14 @@ definitions. */
 .global freertos_risc_v_trap_handler
 .global freertos_risc_v_exception_handler
 .global freertos_risc_v_interrupt_handler
-.global freertos_risc_v_mtimer_interrupt_handler
 
 .extern vTaskSwitchContext
 .extern xTaskIncrementTick
-.extern pullMachineTimerCompareRegister
-.extern pullNextTime
 .extern uxTimerIncrementsForOneTick /* size_t type so 32-bit on 32-bit core and 64-bits on 64-bit core. */
 .extern xTaskReturnAddress
 
 .weak freertos_risc_v_application_exception_handler
 .weak freertos_risc_v_application_interrupt_handler
-/*-----------------------------------------------------------*/
-
-.macro portUPDATE_MTIMER_COMPARE_REGISTER
-    load_x a0, pullMachineTimerCompareRegister  /* Load address of compare register into a0. */
-    load_x a1, pullNextTime                     /* Load the address of ullNextTime into a1. */
-
-    #if( __riscv_xlen == 32 )
-
-        /* Update the 64-bit mtimer compare match value in two 32-bit writes. */
-        li a4, -1
-        lw a2, 0(a1)                /* Load the low word of ullNextTime into a2. */
-        lw a3, 4(a1)                /* Load the high word of ullNextTime into a3. */
-        sw a4, 0(a0)                /* Low word no smaller than old value to start with - will be overwritten below. */
-        sw a3, 4(a0)                /* Store high word of ullNextTime into compare register.  No smaller than new value. */
-        sw a2, 0(a0)                /* Store low word of ullNextTime into compare register. */
-        lw t0, uxTimerIncrementsForOneTick  /* Load the value of ullTimerIncrementForOneTick into t0 (could this be optimized by storing in an array next to pullNextTime?). */
-        add a4, t0, a2              /* Add the low word of ullNextTime to the timer increments for one tick (assumes timer increment for one tick fits in 32-bits). */
-        sltu t1, a4, a2             /* See if the sum of low words overflowed (what about the zero case?). */
-        add t2, a3, t1              /* Add overflow to high word of ullNextTime. */
-        sw a4, 0(a1)                /* Store new low word of ullNextTime. */
-        sw t2, 4(a1)                /* Store new high word of ullNextTime. */
-
-    #endif /* __riscv_xlen == 32 */
-
-    #if( __riscv_xlen == 64 )
-
-        /* Update the 64-bit mtimer compare match value. */
-        ld t2, 0(a1)                /* Load ullNextTime into t2. */
-        sd t2, 0(a0)                /* Store ullNextTime into compare register. */
-        ld t0, uxTimerIncrementsForOneTick  /* Load the value of ullTimerIncrementForOneTick into t0 (could this be optimized by storing in an array next to pullNextTime?). */
-        add t4, t0, t2              /* Add ullNextTime to the timer increments for one tick. */
-        sd t4, 0(a1)                /* Store ullNextTime. */
-
-    #endif /* __riscv_xlen == 64 */
-    .endm
 /*-----------------------------------------------------------*/
 
 /*
@@ -204,11 +88,8 @@ pxPortInitialiseStack:
     addi a0, a0, -portWORD_SIZE         /* Space for critical nesting count. */
     store_x x0, 0(a0)                   /* Critical nesting count starts at 0 for every task. */
 
-#ifdef __riscv_32e
-    addi a0, a0, -(6 * portWORD_SIZE)   /* Space for registers x10-x15. */
-#else
     addi a0, a0, -(22 * portWORD_SIZE)  /* Space for registers x10-x31. */
-#endif
+
     store_x a2, 0(a0)                   /* Task parameters (pvParameters parameter) goes into register x10/a0 on the stack. */
 
     addi a0, a0, -(6 * portWORD_SIZE)   /* Space for registers x5-x9 + taskReturnAddress (register x1). */
@@ -229,22 +110,6 @@ chip_specific_stack_frame:              /* First add any chip specific registers
     slli t1, t1, 4
     or t0, t0, t1                       /* Set MPIE and MPP bits in mstatus value. */
 
-#if( configENABLE_FPU == 1 )
-    /* Mark the FPU as clean in the mstatus value. */
-    li t1, ~MSTATUS_FS_MASK
-    and t0, t0, t1
-    li t1, MSTATUS_FS_CLEAN
-    or t0, t0, t1
-#endif
-
-#if( configENABLE_VPU == 1 )
-    /* Mark the VPU as clean in the mstatus value. */
-    li t1, ~MSTATUS_VS_MASK
-    and t0, t0, t1
-    li t1, MSTATUS_VS_CLEAN
-    or t0, t0, t1
-#endif
-
     addi a0, a0, -portWORD_SIZE
     store_x t0, 0(a0)                   /* mstatus onto the stack. */
 
@@ -263,8 +128,6 @@ xPortStartFirstTask:
     addi    x5, x5, 0x08                /* Set MIE bit so the first task starts with interrupts enabled - required as returns with ret not eret. */
     csrw    mstatus, x5                 /* Interrupts enabled from here! */
 
-    portasmRESTORE_ADDITIONAL_REGISTERS /* Defined in freertos_risc_v_chip_specific_extensions.h to restore any registers unique to the RISC-V implementation. */
-
     load_x  x7,  5  * portWORD_SIZE( sp )   /* t2 */
     load_x  x8,  6  * portWORD_SIZE( sp )   /* s0/fp */
     load_x  x9,  7  * portWORD_SIZE( sp )   /* s1 */
@@ -274,7 +137,6 @@ xPortStartFirstTask:
     load_x  x13, 11 * portWORD_SIZE( sp )   /* a3 */
     load_x  x14, 12 * portWORD_SIZE( sp )   /* a4 */
     load_x  x15, 13 * portWORD_SIZE( sp )   /* a5 */
-#ifndef __riscv_32e
     load_x  x16, 14 * portWORD_SIZE( sp )   /* a6 */
     load_x  x17, 15 * portWORD_SIZE( sp )   /* a7 */
     load_x  x18, 16 * portWORD_SIZE( sp )   /* s2 */
@@ -291,7 +153,6 @@ xPortStartFirstTask:
     load_x  x29, 27 * portWORD_SIZE( sp )   /* t4 */
     load_x  x30, 28 * portWORD_SIZE( sp )   /* t5 */
     load_x  x31, 29 * portWORD_SIZE( sp )   /* t6 */
-#endif
 
     load_x  x5, portCRITICAL_NESTING_OFFSET * portWORD_SIZE( sp )    /* Obtain xCriticalNesting value for this task from task's stack. */
     load_x  x6, pxCriticalNesting           /* Load the address of xCriticalNesting into x6. */
@@ -336,17 +197,6 @@ other_exception:
 freertos_risc_v_interrupt_handler:
     portcontextSAVE_INTERRUPT_CONTEXT
     call freertos_risc_v_application_interrupt_handler
-    portcontextRESTORE_CONTEXT
-/*-----------------------------------------------------------*/
-
-.section .text.freertos_risc_v_mtimer_interrupt_handler
-freertos_risc_v_mtimer_interrupt_handler:
-    portcontextSAVE_INTERRUPT_CONTEXT
-    portUPDATE_MTIMER_COMPARE_REGISTER
-    call xTaskIncrementTick
-    beqz a0, exit_without_context_switch    /* Don't switch context if incrementing tick didn't unblock a task. */
-    call vTaskSwitchContext
-exit_without_context_switch:
     portcontextRESTORE_CONTEXT
 /*-----------------------------------------------------------*/
 
