@@ -87,10 +87,7 @@ size_t xTaskReturnAddress = ( size_t ) portTASK_RETURN_ADDRESS;
 
 void clear_timer_interrupt() {
     systimer_ll_clear_alarm_int(systimer_dev, SYSTIMER_TARGET0);
-//    ets_printf("mcause: %x!\n", RV_READ_CSR(mcause) );
-//    ets_printf("mepc: %x!\n", RV_READ_CSR(mepc) );
 }
-
 
 void intr_matrix_route(int intr_src, int intr_num) {
     if (rv_utils_get_core_id() == 0) {

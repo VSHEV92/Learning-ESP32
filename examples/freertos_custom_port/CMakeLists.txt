@@ -16,6 +16,7 @@ add_executable(${PROJECT_NAME}
     src/kernel/list.c
     src/kernel/queue.c
     src/kernel/tasks.c
+    src/kernel/timers.c
     src/MemMang/heap_4.c
 )
 

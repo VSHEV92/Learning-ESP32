@@ -2,30 +2,33 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
-#define configNUMBER_OF_CORES 1
+#define configNUMBER_OF_CORES                  1
 
-#define configCPU_CLOCK_HZ    ( ( unsigned long ) 16000000 )
+#define configCPU_CLOCK_HZ                     ( ( unsigned long ) 16000000 )
+#define configTICK_RATE_HZ                     100
 
-#define configTICK_RATE_HZ                         100
+#define configUSE_PREEMPTION                   1
+#define configUSE_TIME_SLICING                 1
 
-#define configUSE_PREEMPTION                       1
+#define configMAX_PRIORITIES                   5
 
-#define configUSE_TIME_SLICING                     0
+#define configISR_STACK_SIZE_WORDS             1024
+#define configMINIMAL_STACK_SIZE               4096
 
-#define configMAX_PRIORITIES                       5
+#define configTOTAL_HEAP_SIZE                  1024*128
 
-#define configISR_STACK_SIZE_WORDS                 1024
+#define configTICK_TYPE_WIDTH_IN_BITS          TICK_TYPE_WIDTH_32_BITS
 
-#define configMINIMAL_STACK_SIZE                   4096
+#define configUSE_IDLE_HOOK                    0
+#define configUSE_TICK_HOOK                    0
 
-#define configTOTAL_HEAP_SIZE                      1024*128
+/* Timers configs*/
+#define configUSE_TIMERS                       1
+#define configTIMER_TASK_PRIORITY              configMAX_PRIORITIES
+#define configTIMER_QUEUE_LENGTH               3
+#define configTIMER_TASK_STACK_DEPTH           configMINIMAL_STACK_SIZE
 
-#define configTICK_TYPE_WIDTH_IN_BITS              TICK_TYPE_WIDTH_32_BITS
-
-#define configUSE_IDLE_HOOK                   0
-
-#define configUSE_TICK_HOOK                   0
-
+/* Task functions */
 #define INCLUDE_vTaskPrioritySet               1
 #define INCLUDE_uxTaskPriorityGet              1
 #define INCLUDE_vTaskDelete                    1
