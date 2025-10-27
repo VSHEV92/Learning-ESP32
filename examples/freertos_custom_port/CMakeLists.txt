@@ -10,19 +10,20 @@ project(esp32c3_freertos_port LANGUAGES C ASM)
 # ----------------- ELF file target -----------------
 # ---------------------------------------------------
 add_executable(${PROJECT_NAME} 
-    src/main.c
-    src/port.c
-    src/portASM.S
-    src/list.c
-    src/queue.c
-    src/tasks.c
+    src/app/main.c
+    src/portable/port.c
+    src/portable/portASM.S
+    src/kernel/list.c
+    src/kernel/queue.c
+    src/kernel/tasks.c
     src/MemMang/heap_4.c
 )
 
 
 target_include_directories(${PROJECT_NAME} PRIVATE 
-    .
-    ./include
+    ./include/app
+    ./include/kernel
+    ./include/portable
     $ENV{IDF_PATH}/components/esp_common/include
     $ENV{IDF_PATH}/components/esp_rom/include
     $ENV{IDF_PATH}/components/soc/include
