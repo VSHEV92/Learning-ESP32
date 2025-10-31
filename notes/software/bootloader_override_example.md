@@ -48,10 +48,32 @@ If any procedure inside **bootloader_init()** function not return ESP_OK, then c
 
 ## Select Boot Partition
 
-TODO
+**bootloader_state_t** - partition table, struct that contain ota info, factory, app, test and so on partition positions.
+
+**bootloader_utility_load_partition_table ()** -  parse partition table, get useful data such as location of OTA data partition, factory app partition, and test app partition
+
+- **bootloader_mmap ()** -  map a region of spi flash to data memory in RAM using mmu
+- **esp_partition_table_verify ()** - check magic numbers, md5 and other crc
+- print all partition tables and initialize **bootloader_state_t** structure
+- **bootloader_munmap ()** - unmap a region of spi flash and data memory in RAM
+
+**bootloader_utility_get_selected_boot_partition ()** - return the index of the selected boot partition. This is the preferred boot partition, as determined by the partition table & any OTA sequence number found in OTA data. This partition will only be booted if it contains a valid app image, otherwise load_boot_image() will search for a valid partition using this selection as the starting point. 
 
 ------
 
 ## Load Image
 
-TODO
+**bootloader_utility_load_boot_image()** - boot image from selected partition.
+
+- first try to load selected partition and if not successes, try other partition down to factory image.
+- next try to load other partition, from selected up to maximum count
+- next try to load test partition
+- if failing to load all available partitions, then reset cpu
+
+Partiotions are loaded using **load_image()** function: 
+
+- do some staph for secure boot loading first
+- **unpack_load_app()** - process all image segments:
+  - get all irom and drom segments and map there addresses to cache memory using MMU
+  - jump to image entry address
+  - this will call **call_start_cpu0**() app image function
