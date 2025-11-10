@@ -69,7 +69,11 @@ The main purpose of interrupt allocation is to connent interrupt source to inter
 
 ### Details of esp_cpu_intr_set_handler() call
 
-
+- **esp_cpu_intr_set_handler()** - is wrapper around architecture specific functions: **xt_set_interrupt_handler** - for Xtensa, **intr_handler_set** - for RISCV
+- **intr_handler_set()** - get interrupt item (**intr_handler_item_t** structure) by interrupt number using **intr_get_item()** call. Then set handler and arg fields of interrupt item.
+- **intr_get_item()** - return interrupt item (**intr_handler_item_t** structure) from interrupt items array **s_intr_handlers** using interrupt number as an index
+- **_global_interrupt_handler()** - function that get interrupt item using MCAUSE as index. Then it execute handler with it's argument. **_global_interrupt_handler()** is called from **_interrupt_handler()**
+- **_interrupt_handler()** - is assembly routine witch fill all interrupt vector table fields, except 0 interrupt number. ESP32C3 vector table is **_vector_table**
 
 ------
 
@@ -91,3 +95,33 @@ intr_desc_t - interrupt descriptor structure. It's fields:
 
 
 
+#### Interrupt Vector Descriptors
+
+**vector_desc_t** - interrupt vector descriptor structure that contain:
+
+- interrupt flags (shared, iram safe, level and so on)
+- cpu id
+- interrupt number
+- interrupt source
+- reference to shared interrupt vector descriptor **shared_vector_desc_t** - shared vector info
+- link to next interrupt vector descriptor
+
+**shared_vector_desc_t** - shared interrupt vector descriptor structure that contain:
+
+- is interrupt disabled
+- interrupt source
+- status register address and status mask
+- ISR handler
+- ISR handler arguments
+- link to next interrupt shared vector descriptor
+
+**intr_handle_data_t** - interrupt handle data structure:
+
+-  interrupt vector descriptor
+- shared interrupt vector descriptor
+
+
+
+All vector descriptors **vector_desc_t** organized in linked list. **vector_desc_head** is a head of linked list. Linked list of vector descriptions, sorted by cpu/intno value. **insert_vector_desc()** call is used to add descriptor to linked list. **find_desc_for_int** and **find_desc_for_source** search for vector descriptor by interrupt source and interrupt number.
+
+If vector descriptor mark as **SHARED** it contain **shared_vector_info** field. This is a head of linked list of shared vector descriptors, that attached to given interrupt number.
