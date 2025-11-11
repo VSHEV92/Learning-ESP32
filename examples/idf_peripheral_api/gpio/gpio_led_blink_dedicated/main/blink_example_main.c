@@ -23,17 +23,13 @@ void app_main(void)
     };
 
     dedic_gpio_bundle_handle_t led_bundle;
-    uint32_t led_bundle_mask;
     uint8_t led_state = 0;
     
     // create gpio bundle (configure IOMUX, GPIO Matrix to CPU GPIO CSRs, enable outputs)
     dedic_gpio_new_bundle(&led_bundle_cfg, &led_bundle);
-
-    // get led bundle mask (CPU GPIO CSR bits that was assigned to bundle)
-    dedic_gpio_get_out_mask(led_bundle, &led_bundle_mask);
     
     while (true) {
-        dedic_gpio_bundle_write(led_bundle, led_bundle_mask, led_state);
+        dedic_gpio_bundle_write(led_bundle, 0b1, led_state);
         vTaskDelay( pdMS_TO_TICKS(BLINK_PERIOD_MS) );
         led_state = !led_state;
     }
