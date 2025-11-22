@@ -1,6 +1,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include <max7219.h>
+#include "max7219.h"
 
 #define MAX7219_SCLK 4
 #define MAX7219_MOSI 2
