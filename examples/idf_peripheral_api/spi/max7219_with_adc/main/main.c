@@ -1,11 +1,17 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_log.h"
 #include "esp_adc/adc_oneshot.h"
 #include "max7219.h"
 
 #define MAX7219_SCLK 4
 #define MAX7219_MOSI 2
 #define MAX7219_CS 3
+
+#define ADC_MAX_VALUE (1 << ADC_BITWIDTH_12)
+#define MAX7219_LINES 8
+
+#define COMPARE_THRESHOLD_STEP (ADC_MAX_VALUE / (MAX7219_LINES + 1))
 
 void app_main(void) {
 
@@ -25,10 +31,11 @@ void app_main(void) {
 
     // configure ADC channel
     adc_oneshot_chan_cfg_t adc_channel_cfg = {
-        .bitwidth = ADC_BITWIDTH_DEFAULT, // max supported bitwidth
+        .bitwidth = ADC_BITWIDTH_12,
         .atten = ADC_ATTEN_DB_12,
     };
     adc_oneshot_config_channel(adc_handle, ADC_CHANNEL_0, &adc_channel_cfg);
+
 
     // -----------------------------------------
     // -------- configure max7219 device -------
@@ -57,13 +64,26 @@ void app_main(void) {
     max7219_init_desc(&max7219_device, SPI2_HOST, MAX7219_MAX_CLOCK_SPEED_HZ, MAX7219_CS);
     max7219_init(&max7219_device);
 
-    int adc_raw_data;
+
+    // -----------------------------------------
+    // -------- display signal intensity -------
+    // -----------------------------------------
+
+    // calculate threshold value
+    int compare_thresholds[MAX7219_LINES];
+    for (int i = 0; i < MAX7219_LINES; i++){
+        compare_thresholds[i] = (i+1) * COMPARE_THRESHOLD_STEP;
+    }
+
+    // read adc raw data, compare with thresholds and display on the max7219 
     while (true) {
-        // read adc raw data (bits directly for ADC)
+        int adc_raw_data;
         adc_oneshot_read(adc_handle, ADC_CHANNEL_0, &adc_raw_data);
 
-        ESP_LOGI(TAG, "ADC valtage is %d mV", adc_raw_data);
-        vTaskDelay( pdMS_TO_TICKS(200) );
+        for (int i = 0; i < MAX7219_LINES; i++){
+            int line_value = (adc_raw_data > compare_thresholds[i]) ? 0xFF : 0x0;
+            max7219_set_digit(&max7219_device, i, line_value);
+        }
     }
 
 }
