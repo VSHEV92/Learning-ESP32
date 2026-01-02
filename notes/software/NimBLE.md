@@ -3,6 +3,20 @@
 
 ------
 
+## Configuration
+
+- **CONFIG_BT_ENABLED=y** - enable ESP bluetooth component
+- **CONFIG_BT_NIMBLE_ENABLED=y** - set NimBLE as host stack
+- **CONFIG_ESP_PHY_CALIBRATION_AND_DATA_STORAGE=n** - disable PHY calibration data storage in NVS. So that you don't need NVS component
+
+------
+
+## ble_hs_cfg.sync_cb()
+
+Set **ble_hs_cfg.sync_cb** callback. This callback will be triggered when NimBLE stack will be ready to process events. This callback should start bluetooth actions 
+
+------
+
 ## nimble_port_init()
 
 1. Initialize **esp_bt_controller_config_t** structure using **BT_CONTROLLER_INIT_CONFIG_DEFAULT()** macro.
@@ -30,6 +44,16 @@
       - Call **ble_transport_init()** to initialize NimBLE HCI events and commands (nimble/transport)
       - Create and give binary semaphore **vhci_send_sem**
    4. Call **ble_npl_eventq_init()** to initialize NimBLE event queue
-   5.  Call **os_mempool_module_init()** and **os_msys_init()** to initialize the global memory pool
-   6.  Call **ble_transport_ll_init()** to initilize HCI of bluetooth controller. This is NimBLE function used for different BT controllers. For ESP just set HCI receive callback to **ble_transport_host_recv_cb**
+   5. Call **os_mempool_module_init()** and **os_msys_init()** to initialize the global memory pool
+   6. Call **ble_transport_ll_init()** to initilize HCI of bluetooth controller. This is NimBLE function used for different BT controllers. For ESP just set HCI receive callback to **ble_transport_host_recv_cb**
    7. Call **ble_transport_hs_init()** to initialize Host. Call **ble_hs_init()** to init all BLE Host data structures. At the end **ble_hs_init()** put to event queue **ble_hs_start()**. In **ble_hs_start()** function **ble_hs_sync()** is called, which at the end call **ble_hs_cfg.sync_cb** call back.
+
+------
+
+### nimble_port_run()
+
+This function is never returns. Indide forever loop in does following actions:
+
+1. Try to get event from **g_eventq_dflt** - the default event queue used to manage and dispatch system events. Waiting timeout is set to forever - **BLE_NPL_TIME_FOREVER**.
+2. If event is getted, then process it using **ble_npl_event_run()**.  This function just call **ev_cb()** - callback of event from queue.
+3. If get event is **ble_hs_ev_stop** - an internal event object used to trigger or signal the shutdown process of the NimBLE Host, then break the loop and stop processing.
