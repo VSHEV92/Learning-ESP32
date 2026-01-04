@@ -4,6 +4,12 @@
 static const char TAG[] = "Nimble RGB Led Client";
 static const char PEER_ADDRESS[] = "F0:F5:BD:27:59:6A";
 
+extern uint16_t connection_handle;
+extern bool connection_status;
+
+#define LED_COLOR_HANDLE 3
+#define LED_BRIGHTNESS_HANDLE 5
+
 extern void start_discovery(void); 
 
 // gap event handler
@@ -69,15 +75,18 @@ int gap_event_handler(struct ble_gap_event *event, void *arg) {
         // ------------------- Connect event ----------------------
         case BLE_GAP_EVENT_CONNECT:
             ESP_LOGI(TAG, "Connection %s", event->connect.status == 0 ? "established" : "failed");
+            connection_handle = event->connect.conn_handle;
+            connection_status = true;
             return 0;
 
         // --------------------------------------------------------
         // -------------------- Disconnect event ------------------
         case BLE_GAP_EVENT_DISCONNECT:
             ESP_LOGI(TAG, "Disconnected. Reason=%d", event->disconnect.reason);
+            connection_handle = 0;
+            connection_status = false;
             start_discovery();
             return 0;
-
     }
 
     return 0;

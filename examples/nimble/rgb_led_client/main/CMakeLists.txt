@@ -3,5 +3,8 @@ idf_component_register(
     SRCS 
         "main.c" 
         "gap.c"
-    PRIV_REQUIRES bt
+    PRIV_REQUIRES 
+        esp_driver_gpio
+        esp_adc 
+        bt
 )
