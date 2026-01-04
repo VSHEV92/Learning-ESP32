@@ -1,11 +1,10 @@
 #include "esp_log.h"
-#include "esp_central.h"
 #include "host/ble_hs.h"
 
 static const char TAG[] = "Nimble RGB Led Client";
 static const char PEER_ADDRESS[] = "F0:F5:BD:27:59:6A";
 
-extern void start_discovery(void) {
+extern void start_discovery(void); 
 
 // gap event handler
 int gap_event_handler(struct ble_gap_event *event, void *arg) {
@@ -70,14 +69,12 @@ int gap_event_handler(struct ble_gap_event *event, void *arg) {
         // ------------------- Connect event ----------------------
         case BLE_GAP_EVENT_CONNECT:
             ESP_LOGI(TAG, "Connection %s", event->connect.status == 0 ? "established" : "failed");
-            peer_add(event->connect.conn_handle);
             return 0;
 
         // --------------------------------------------------------
         // -------------------- Disconnect event ------------------
         case BLE_GAP_EVENT_DISCONNECT:
             ESP_LOGI(TAG, "Disconnected. Reason=%d", event->disconnect.reason);
-            peer_delete(event->disconnect.conn.conn_handle);
             start_discovery();
             return 0;
 
