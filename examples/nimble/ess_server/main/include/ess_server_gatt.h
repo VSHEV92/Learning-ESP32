@@ -1,9 +1,12 @@
 #ifndef ESS_SERVER_GATT_H
 #define ESS_SERVER_GATT_H
 
+#include "string.h"
 #include "nimble/nimble_port.h"
 #include "host/ble_hs.h"
 #include "services/gatt/ble_svc_gatt.h"
+
+#include "ess_server_temperature_sensor.h"
 
 #define ESS_SERVER_GATT_UUID_ESS                0x181A
 

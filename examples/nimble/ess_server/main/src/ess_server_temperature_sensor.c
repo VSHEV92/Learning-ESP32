@@ -1,6 +1,6 @@
 #include "ess_server_temperature_sensor.h"
 
-temperature_sensor_handle_t ess_server_temperature_sensor_instance;
+static temperature_sensor_handle_t ess_server_temperature_sensor_instance;
 
 void ess_server_temperature_sensor_init(){
     // configure temperature sensor
@@ -11,4 +11,10 @@ void ess_server_temperature_sensor_init(){
 
     // enable temperature sensor
     temperature_sensor_enable(ess_server_temperature_sensor_instance);
+}
+
+float ess_server_temperature_sensor_get_temp(){
+    float temperature; 
+    temperature_sensor_get_celsius(ess_server_temperature_sensor_instance, &temperature);
+    return temperature;
 }

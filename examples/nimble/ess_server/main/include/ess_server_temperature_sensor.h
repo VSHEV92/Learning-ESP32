@@ -3,8 +3,7 @@
 
 #include "driver/temperature_sensor.h"
 
-extern temperature_sensor_handle_t ess_server_temperature_sensor_instance;
-
 void ess_server_temperature_sensor_init();
+float ess_server_temperature_sensor_get_temp();
 
 #endif
