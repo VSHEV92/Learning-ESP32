@@ -7,8 +7,8 @@ void ess_server_gap_init(void) {
     //
     // GAP service initialization
     ble_svc_gap_init();
-    ble_svc_gap_device_name_set(ESS_DEVICE_NAME);
-    ble_svc_gap_device_appearance_set(ESS_DEVICE_APPEARANCE);
+    ble_svc_gap_device_name_set(ESS_SERVER_GAP_DEVICE_NAME);
+    ble_svc_gap_device_appearance_set(ESS_SERVER_GAP_DEVICE_APPEARANCE);
 }
 
 // NimBLE on_sync callback
