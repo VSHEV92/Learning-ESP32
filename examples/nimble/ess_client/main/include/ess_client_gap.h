@@ -8,6 +8,8 @@
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
 
+#include "ess_client_led_matrix.h"
+
 #define ESS_CLIENT_GAP_UUID_ESS 0x181A
 #define ESS_CLIENT_GAP_UUID_TEMP_CELSIUS 0x272F
 

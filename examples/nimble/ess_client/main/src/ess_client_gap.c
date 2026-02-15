@@ -1,7 +1,7 @@
 #include "ess_client_gap.h"
 
-uint16_t ess_server_connection_handle = 0;
-uint16_t ess_server_chr_temp_celsius_handle = 0;
+static uint16_t ess_server_connection_handle = 0;
+static uint16_t ess_server_chr_temp_celsius_handle = 0;
 
 static const ble_uuid16_t ess_uuid = BLE_UUID16_INIT(ESS_CLIENT_GAP_UUID_ESS);
 static const ble_uuid16_t ess_chr_temp_celsius_uuid = BLE_UUID16_INIT(ESS_CLIENT_GAP_UUID_TEMP_CELSIUS);
@@ -9,7 +9,6 @@ static const ble_uuid16_t ess_chr_temp_celsius_uuid = BLE_UUID16_INIT(ESS_CLIENT
 static int gap_event_handler(struct ble_gap_event *event, void *arg);
 static int service_discovered_cb(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_svc *svc, void *arg);
 static int chr_discovered_cb(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_chr *chr, void *arg);
-static int temp_read_cb(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
 
 
 // Initialize GAP service
@@ -109,6 +108,7 @@ static int gap_event_handler(struct ble_gap_event *event, void *arg) {
             ESP_LOGI("", "Disconnected. Reason=%d", event->disconnect.reason);
             ess_server_connection_handle = 0;
             ess_server_chr_temp_celsius_handle = 0;
+            ess_client_led_matrix_stop_read();
             ess_client_gap_start_discovery();
             return 0;
     }
@@ -133,18 +133,10 @@ static int chr_discovered_cb(uint16_t conn_handle, const struct ble_gatt_error *
 
             // Start temperature reading
             ESP_LOGI("", "Start temperature reading");
-            if (ess_server_connection_handle) {
-                ble_gattc_read(ess_server_connection_handle, ess_server_chr_temp_celsius_handle, temp_read_cb, NULL);
-            }
+            ess_client_led_matrix_start_read(ess_server_connection_handle, ess_server_chr_temp_celsius_handle);
         }
     }
     return 0;
 }
 
 
-static int temp_read_cb(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg) {
-    if (error->status == 0) {
-        ESP_LOGI("", "Read ESS Temperature: %sC", (char*)attr->om->om_data);
-    }
-    return 0;
-}
