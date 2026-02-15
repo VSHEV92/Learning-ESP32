@@ -69,6 +69,7 @@ int ess_chr_temp_celsius_access_cb(uint16_t conn_handle, uint16_t attr_handle, s
     switch (ctxt->op) {
         case BLE_GATT_ACCESS_OP_READ_CHR:
             temp_float = ess_server_temperature_sensor_get_temp();
+            ESP_LOGI("", "Temperature sensor value read %f", temp_float);
             snprintf(temp_str, sizeof(temp_str), "%4.1f", temp_float);
             os_mbuf_append(ctxt->om, temp_str, sizeof(temp_str));
             return 0;
